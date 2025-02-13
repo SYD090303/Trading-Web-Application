@@ -1,0 +1,30 @@
+# =======================
+# Trading Web App Configuration
+# =======================
+spring:
+  application:
+    name: TradingWebApp  # Defines the application name
+
+  # =======================
+  # Database Configuration
+  # =======================
+  datasource:
+    url: jdbc:mysql://localhost:3306/tradingwebapp  # MySQL database URL
+    username: root  # Database username
+    password: Sarthak@2003  # Database password (Consider using environment variables for security)
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL JDBC Driver
+
+  # =======================
+  # JPA Configuration
+  # =======================
+  jpa:
+    hibernate:
+      ddl-auto: update  # Automatically updates the database schema
+    show-sql: true  # Enables logging of SQL queries
+
+# =======================
+# Server Configuration
+# =======================
+server:
+  port: 9999  # The application will run on port 9999
+
