@@ -7,7 +7,7 @@ import com.project.TradingWebApp.entity.UserEntity;
 import com.project.TradingWebApp.repository.UserRepository;
 import com.project.TradingWebApp.response.AuthResponse;
 import com.project.TradingWebApp.service.impl.CustomUserDetailsService;
-import com.project.TradingWebApp.service.impl.EmailService;
+import com.project.TradingWebApp.service.impl.EmailServiceImpl;
 import com.project.TradingWebApp.service.TwoFactorOtpService;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class AuthController {
     private TwoFactorOtpService twoFactorOtpService;
 
     @Autowired
-    private EmailService emailService;
+    private EmailServiceImpl emailServiceImpl;
 
     /**
      * **User Registration API**
@@ -111,7 +111,7 @@ public class AuthController {
                     twoFactorOtpService.deleteTwoFactorOtp(oldTwoFactorOtp);
                 }
                 TwoFactorOtp newTwoFactorOtp = twoFactorOtpService.generateTwoFactorOtp(authUser, otp, accessToken);
-                emailService.sendVerificationEmail(user.getEmail(), otp);
+                emailServiceImpl.sendVerificationEmail(user.getEmail(), otp);
                 twoFactorAuth.setSession(newTwoFactorOtp.getId());
 
                 return new ResponseEntity<>(twoFactorAuth, HttpStatus.ACCEPTED);
@@ -125,7 +125,7 @@ public class AuthController {
         }
     }
 
-
+    @PostMapping("/two-factor/otp/{otp}")
     public ResponseEntity<AuthResponse> verifySignInOtp(@PathVariable final String otp,
                                                         @RequestParam final String otpId
     ) {
