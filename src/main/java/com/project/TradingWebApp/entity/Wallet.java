@@ -36,5 +36,5 @@ public class Wallet {
      * Stored as a BigDecimal to ensure precision for financial transactions and prevent issues with floating-point arithmetic.
      * Represents the amount of funds available in the user's wallet for trading and other transactions.
      */
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
 }

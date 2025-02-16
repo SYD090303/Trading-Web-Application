@@ -96,39 +96,82 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
+//    @Transactional
+//    public Order sellAsset(Coin coin, double quantity, UserEntity user) throws Exception {
+//        if (quantity <= 0) {
+//            throw new RuntimeException("Quantity must be greater than zero");
+//        }
+//        Asset assetToSell = assetService.getAssetByUserIdAndCoinId(user.getId(), coin.getId());
+//        double buyPrice = assetToSell.getBuyPrice();
+//        double sellPrice = coin.getCurrentPrice();
+//        OrderItem orderItem = createOrderItem(coin, quantity, buyPrice, sellPrice);
+//
+//        Order order = createOrder(user, orderItem, OrderType.SELL);
+//        orderItem.setOrder(order);
+//
+//        if (assetToSell.getQuantity() >= quantity) {
+//            order.setOrderStatus(OrderStatus.SUCCESS);
+//            order.setOrderType(OrderType.SELL);
+//            Order updatedOrder = orderRepository.save(order);
+//            walletService.payOrderPayment(order, user);
+//            Asset updateedAsset = assetService.updateAsset(assetToSell.getId(), -quantity);
+//
+//            if (updateedAsset.getQuantity() * coin.getCurrentPrice() <= 1) {
+//                assetService.deleteAsset(updateedAsset.getId());
+//            }
+//            return updatedOrder;
+//        } else {
+//            throw new RuntimeException("Insufficient Quantity to sell");
+//        }
+//    }
+
     @Transactional
     public Order sellAsset(Coin coin, double quantity, UserEntity user) throws Exception {
         if (quantity <= 0) {
             throw new RuntimeException("Quantity must be greater than zero");
         }
+
+        // Fetch the asset the user wants to sell
         Asset assetToSell = assetService.getAssetByUserIdAndCoinId(user.getId(), coin.getId());
+        if (assetToSell == null) {
+            throw new RuntimeException("Asset not found!");
+        }
+
         double buyPrice = assetToSell.getBuyPrice();
         double sellPrice = coin.getCurrentPrice();
-        if (assetToSell != null) {
 
-
-            OrderItem orderItem = createOrderItem(coin, quantity, buyPrice, sellPrice);
-
-            Order order = createOrder(user, orderItem, OrderType.SELL);
-            orderItem.setOrder(order);
-
-            if (assetToSell.getQuantity() >= quantity) {
-                order.setOrderStatus(OrderStatus.SUCCESS);
-                order.setOrderType(OrderType.SELL);
-                Order updatedOrder = orderRepository.save(order);
-                walletService.payOrderPayment(order, user);
-                Asset updateedAsset = assetService.updateAsset(assetToSell.getId(), -quantity);
-
-                if (updateedAsset.getQuantity() * coin.getCurrentPrice() <= 1) {
-                    assetService.deleteAsset(updateedAsset.getId());
-                }
-                return updatedOrder;
-            } else {
-                throw new RuntimeException("Insufficient Quantity to sell");
-            }
+        // Ensure sufficient quantity is available
+        if (assetToSell.getQuantity() < quantity) {
+            throw new RuntimeException("Insufficient Quantity to sell");
         }
-        throw new RuntimeException("Asset not found");
+
+        // Create Order and OrderItem
+        OrderItem orderItem = createOrderItem(coin, quantity, buyPrice, sellPrice);
+        Order order = createOrder(user, orderItem, OrderType.SELL);
+        order.setOrderStatus(OrderStatus.SUCCESS);
+        order.setOrderType(OrderType.SELL);
+
+        // Set the correct order price
+        order.setPrice(BigDecimal.valueOf(sellPrice * quantity));
+
+        orderItem.setOrder(order);
+        Order updatedOrder = orderRepository.save(order);
+
+        // Process Wallet Payment
+        walletService.payOrderPayment(order, user);
+
+        // Update Asset Quantity
+        Asset updatedAsset = assetService.updateAsset(assetToSell.getId(), -quantity);
+
+        // If the remaining value of the asset is too small, delete it
+        if (updatedAsset.getQuantity() * coin.getCurrentPrice() <= 1) {
+            assetService.deleteAsset(updatedAsset.getId());
+        }
+
+        return updatedOrder;
     }
+
+
 
     private OrderItem createOrderItem(Coin coin,
                                       double quantity, double buyPrice, double sellPrice) {

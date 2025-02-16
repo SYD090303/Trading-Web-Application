@@ -41,7 +41,7 @@ public class UserController {
      * @return ResponseEntity containing the UserEntity and HTTP status OK (200) if successful.
      * @throws Exception if user not found or token is invalid.
      */
-    @GetMapping("/profile")
+    @GetMapping("/api/users/profile")
     public ResponseEntity<UserEntity> getUserProfile(@RequestHeader("Authorization") String token) throws Exception {
         UserEntity user = userService.findUserByToken(token);
 

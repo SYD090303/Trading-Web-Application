@@ -6,6 +6,7 @@ import com.project.TradingWebApp.entity.UserEntity;
 import com.project.TradingWebApp.entity.Wallet;
 import com.project.TradingWebApp.repository.WalletRepository;
 import com.project.TradingWebApp.service.WalletService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ public class WalletServiceImpl implements WalletService {
         if (wallet == null) {
             wallet = new Wallet();
             wallet.setUser(user);
+            walletRepository.save(wallet);
         }
         return wallet;
     }
@@ -109,9 +111,16 @@ public class WalletServiceImpl implements WalletService {
      * @return The updated Wallet object after the transaction.
      * @throws Exception If the user has insufficient balance for the transaction.
      */
+    @Transactional
     @Override
     public Wallet payOrderPayment(Order order, UserEntity user) throws Exception {
-        Wallet wallet = getUserWalllet(user);
+        Wallet wallet = getUserWallet(user);
+
+        // Log the balance before processing
+        System.out.println("🔍 Processing order payment...");
+        System.out.println("➡️ Order Type: " + order.getOrderType());
+        System.out.println("➡️ Order Price: " + order.getPrice());
+        System.out.println("➡️ Wallet Old Balance: " + wallet.getBalance());
 
         if (order.getOrderType().equals(OrderType.BUY)) {
             // Deduct balance for BUY orders
@@ -128,6 +137,17 @@ public class WalletServiceImpl implements WalletService {
             wallet.setBalance(newBalance);
         }
 
-        return walletRepository.save(wallet);
+        Wallet updatedWallet = walletRepository.save(wallet);
+
+        // Log the updated balance
+        System.out.println("✅ Wallet Updated Successfully! New Balance: " + updatedWallet.getBalance());
+
+        return updatedWallet;
     }
+
+    public Wallet getUserWallet(UserEntity user) {
+        return walletRepository.findWalletByUserId(user.getId());
+    }
+
+
 }

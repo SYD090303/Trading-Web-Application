@@ -1,5 +1,6 @@
 package com.project.TradingWebApp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -201,8 +202,7 @@ public class Coin {
      */
     private LocalDateTime allTimeLowDate;
 
-    @Column(name = "roi")
-    @JsonProperty("roi")
+    @JsonIgnore
     /**
      * Return on Investment data, if available from the API.
      * This field might contain ROI information for different timeframes, but its structure depends on the API's response.

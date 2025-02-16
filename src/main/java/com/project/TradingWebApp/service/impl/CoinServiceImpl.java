@@ -80,6 +80,42 @@ public class CoinServiceImpl implements CoinService {
      * @return The coin details in JSON format.
      * @throws Exception If an error occurs while fetching data.
      */
+//    @Override
+//    public String getCoinDetails(String coinId) throws Exception {
+//        String url = "https://api.coingecko.com/api/v3/coins/" + coinId;
+//        RestTemplate restTemplate = new RestTemplate();
+//        try {
+//            HttpHeaders headers = new HttpHeaders();
+//            HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
+//            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+//            JsonNode node = objectMapper.readTree(response.getBody());
+//
+//            Coin coin = new Coin();
+//            coin.setId(node.get("id").asText());
+//            coin.setName(node.get("name").asText());
+//            coin.setSymbol(node.get("symbol").asText());
+//            coin.setImage(node.get("image").get("large").asText());
+//
+//            JsonNode marketData = node.get("market_data");
+//            coin.setCurrentPrice(marketData.get("current_price").asDouble());
+//            coin.setMarketCap(marketData.get("market_cap").asLong());
+//            coin.setMarketCapRank(marketData.get("market_cap_rank").asInt());
+//            coin.setTotalVolume(marketData.get("total_volume").get("usd").asLong());
+//            coin.setHigh24h(marketData.get("high_24h").get("usd").asDouble());
+//            coin.setLow24h(marketData.get("low_24h").get("usd").asDouble());
+//            coin.setPriceChange24h(marketData.get("price_change_24h").asDouble());
+//            coin.setPriceChangePercentage24h(marketData.get("price_change_percentage_24h").asDouble());
+//            coin.setMarketCapChange24h(marketData.get("market_cap_change_24h").asLong());
+//            coin.setMarketCapChangePercentage24h(marketData.get("market_cap_change_percentage_24h").asDouble());
+//            coin.setTotalSupply(marketData.get("total_supply").get("usd").asLong());
+//            coin.setMarketCapRank(marketData.get("market_cap_rank").asInt());
+//            coinRepository.save(coin);
+//            return response.getBody();
+//        } catch (HttpClientErrorException | HttpServerErrorException e) {
+//            System.out.println(e.getMessage());
+//            throw new Exception(e.getMessage());
+//        }
+//    }
     @Override
     public String getCoinDetails(String coinId) throws Exception {
         String url = "https://api.coingecko.com/api/v3/coins/" + coinId;
@@ -91,21 +127,61 @@ public class CoinServiceImpl implements CoinService {
             JsonNode node = objectMapper.readTree(response.getBody());
 
             Coin coin = new Coin();
-            coin.setId(node.get("id").asText());
-            coin.setName(node.get("name").asText());
-            coin.setSymbol(node.get("symbol").asText());
-            coin.setImage(node.get("image").get("large").asText());
+            coin.setId(Optional.ofNullable(node.get("id")).map(JsonNode::asText).orElse(null));
+            coin.setName(Optional.ofNullable(node.get("name")).map(JsonNode::asText).orElse(null));
+            coin.setSymbol(Optional.ofNullable(node.get("symbol")).map(JsonNode::asText).orElse(null));
+
+            JsonNode imageNode = node.get("image");
+            coin.setImage(Optional.ofNullable(imageNode).flatMap(img -> Optional.ofNullable(img.get("large"))).map(JsonNode::asText).orElse(null));
 
             JsonNode marketData = node.get("market_data");
-            coin.setCurrentPrice(marketData.get("current_price").get("usd").asDouble());
-            coin.setMarketCap(marketData.get("market_cap").get("usd").asLong());
-            coin.setMarketCapRank(marketData.get("market_cap_rank").asInt());
-            coin.setTotalVolume(marketData.get("total_volume").get("usd").asLong());
+            if (marketData != null) {
+                JsonNode currentPriceNode = marketData.get("current_price");
+                if (currentPriceNode != null && currentPriceNode.get("usd") != null) { // Check for USD price
+                    coin.setCurrentPrice(currentPriceNode.get("usd").asDouble());
+                }
+
+                coin.setMarketCap(Optional.ofNullable(marketData.get("market_cap")).map(JsonNode::asLong).orElse(0L));
+                coin.setMarketCapRank(Optional.ofNullable(marketData.get("market_cap_rank")).map(JsonNode::asInt).orElse(0));
+
+                JsonNode totalVolumeNode = marketData.get("total_volume");
+                if (totalVolumeNode != null && totalVolumeNode.get("usd") != null) { // Check for USD volume
+                    coin.setTotalVolume(totalVolumeNode.get("usd").asLong());
+                }
+
+                JsonNode high24hNode = marketData.get("high_24h");
+                if (high24hNode != null && high24hNode.get("usd") != null) {
+                    coin.setHigh24h(high24hNode.get("usd").asDouble());
+                }
+
+                JsonNode low24hNode = marketData.get("low_24h");
+                if (low24hNode != null && low24hNode.get("usd") != null) {
+                    coin.setLow24h(low24hNode.get("usd").asDouble());
+                }
+
+                coin.setPriceChange24h(Optional.ofNullable(marketData.get("price_change_24h")).map(JsonNode::asDouble).orElse(0.0));
+                coin.setPriceChangePercentage24h(Optional.ofNullable(marketData.get("price_change_percentage_24h")).map(JsonNode::asDouble).orElse(0.0));
+                coin.setMarketCapChange24h(Optional.ofNullable(marketData.get("market_cap_change_24h")).map(JsonNode::asLong).orElse(0L));
+                coin.setMarketCapChangePercentage24h(Optional.ofNullable(marketData.get("market_cap_change_percentage_24h")).map(JsonNode::asDouble).orElse(0.0));
+
+                JsonNode totalSupplyNode = marketData.get("total_supply");
+                if (totalSupplyNode != null) {
+                    coin.setTotalSupply(totalSupplyNode.asLong());
+                }
+
+            }
+
 
             coinRepository.save(coin);
             return response.getBody();
+
         } catch (HttpClientErrorException | HttpServerErrorException e) {
+            System.out.println(e.getMessage());
             throw new Exception(e.getMessage());
+        } catch (NullPointerException e) {
+            System.err.println("Error parsing JSON for coinId: " + coinId + ".  Check API response.");
+            e.printStackTrace(); // Print the full stack trace for debugging
+            throw new Exception("Error parsing JSON. Check API response for coinId: " + coinId); // Re-throw with a more informative message
         }
     }
 

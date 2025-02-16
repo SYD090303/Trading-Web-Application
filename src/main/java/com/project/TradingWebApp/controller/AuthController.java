@@ -6,6 +6,7 @@ import com.project.TradingWebApp.entity.TwoFactorOtp;
 import com.project.TradingWebApp.entity.UserEntity;
 import com.project.TradingWebApp.repository.UserRepository;
 import com.project.TradingWebApp.response.AuthResponse;
+import com.project.TradingWebApp.service.WatchlistService;
 import com.project.TradingWebApp.service.impl.CustomUserDetailsService;
 import com.project.TradingWebApp.service.impl.EmailServiceImpl;
 import com.project.TradingWebApp.service.TwoFactorOtpService;
@@ -54,6 +55,9 @@ public class AuthController {
     @Autowired
     private EmailServiceImpl emailServiceImpl;
 
+    @Autowired
+    private WatchlistService watchlistService;
+
     /**
      * **User Registration API**
      * <p>
@@ -75,6 +79,7 @@ public class AuthController {
         newUser.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(newUser);
 
+        watchlistService.createWatchlist(newUser);
         Authentication auth = authenticate(user.getEmail(), user.getPassword());
         SecurityContextHolder.getContext().setAuthentication(auth);
         String accessToken = JwtProvider.generateAccessToken(auth);

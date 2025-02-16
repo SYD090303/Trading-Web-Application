@@ -43,9 +43,17 @@ public class AssetServiceImpl implements AssetService {
     @Override
     public Asset updateAsset(Long assetId, double quantity) {
         Asset oldAsset = getAssetById(assetId);
-        oldAsset.setQuantity(quantity + oldAsset.getQuantity());
+
+        System.out.println("Before Update - Asset ID: " + assetId + ", Old Quantity: " + oldAsset.getQuantity() + ", Change: " + quantity);
+
+        double newQuantity = oldAsset.getQuantity() + quantity;
+        oldAsset.setQuantity(newQuantity);
+
+        System.out.println("After Update - Asset ID: " + assetId + ", New Quantity: " + oldAsset.getQuantity());
+
         return assetRepository.save(oldAsset);
     }
+
 
     @Override
     public Asset getAssetByUserIdAndCoinId(Long userId, String coinId) {

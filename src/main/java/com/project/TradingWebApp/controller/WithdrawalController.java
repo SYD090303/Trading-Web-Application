@@ -1,10 +1,14 @@
 package com.project.TradingWebApp.controller;
 
+import com.project.TradingWebApp.domain.WalletTransactionType;
 import com.project.TradingWebApp.entity.UserEntity;
 import com.project.TradingWebApp.entity.Wallet;
+import com.project.TradingWebApp.entity.WalletTransaction;
 import com.project.TradingWebApp.entity.Withdrawal;
+import com.project.TradingWebApp.repository.WalletTransactionRepository;
 import com.project.TradingWebApp.service.UserService;
 import com.project.TradingWebApp.service.WalletService;
+import com.project.TradingWebApp.service.WalletTransactionService;
 import com.project.TradingWebApp.service.WithdrawalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +29,13 @@ public class WithdrawalController {
     @Autowired
     private UserService userService;
 
+
+    @Autowired
+    private WalletTransactionService walletTransactionService;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
+
     @PostMapping("/api/withdrawal/{amount}")
     public ResponseEntity<?> withdrwalRequest(@PathVariable Long amount,
                                               @RequestHeader("Authorization") String token) throws Exception {
@@ -34,6 +45,13 @@ public class WithdrawalController {
         Withdrawal withdrawal = withdrawalService.requestWithdrawal(amount,user);
         walletService.addBalanceToWallet(userWallet,-withdrawal.getAmount());
 
+        WalletTransaction walletTransaction = new WalletTransaction();
+        walletTransaction.setAmount(withdrawal.getAmount());
+        walletTransaction.setWallet(userWallet);
+        walletTransaction.setPurpose("Bank account withdrawal");
+        walletTransaction.setType(WalletTransactionType.WITHDRAWAL);
+        walletTransaction.setTransferId(null);
+        walletTransactionRepository.save(walletTransaction);
         return new ResponseEntity<>(withdrawal,HttpStatus.OK);
     }
 

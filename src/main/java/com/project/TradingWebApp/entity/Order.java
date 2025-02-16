@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Table(name="orders")
 /**
  * Represents an Order entity in the trading application.
  * This entity stores information about a trading order placed by a user, including details like order type, price, status, and related items.

@@ -32,7 +32,7 @@ public class CoinController {
      * @throws Exception If an error occurs during the retrieval process.
      */
     @GetMapping
-    ResponseEntity<List<Coin>> getCoinList(@RequestParam("page") int page) throws Exception {
+    ResponseEntity<List<Coin>> getCoinList(@RequestParam(required = false, name = "page") int page) throws Exception {
         List<Coin> coins = coinService.getCoins(page);
         return new ResponseEntity<>(coins, HttpStatus.OK);
     }

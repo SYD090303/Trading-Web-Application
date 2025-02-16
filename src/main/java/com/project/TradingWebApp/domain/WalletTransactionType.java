@@ -39,4 +39,8 @@ public enum WalletTransactionType {
      * It reflects the inflow of funds into the wallet from asset sales.
      */
     SELL_ASSET
+    ,
+    WITHDRAWAL_REQUESTED,
+    WITHDRAWAL_FAILED,
+    WITHDRAWAL_COMPLETED
 }

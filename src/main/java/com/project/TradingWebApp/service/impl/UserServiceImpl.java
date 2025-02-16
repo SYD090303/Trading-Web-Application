@@ -64,13 +64,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity findUserByToken(String token) throws Exception {
         String userEmail = JwtProvider.getEmailFromToken(token);
+
+        // Log extracted email
+        System.out.println("Extracted Email from Token: " + userEmail);
+
         UserEntity user = userRepository.findByEmail(userEmail);
 
         if (user == null) {
-            throw new Exception("User Not Found");
+            throw new Exception("User Not Found for email: " + userEmail);
         }
         return user;
     }
+
 
     /**
      * Enables two-factor authentication (2FA) for a user.

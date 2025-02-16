@@ -28,3 +28,14 @@ spring:
 server:
   port: 9999  # The application will run on port 9999
 
+# =======================
+# Payment Gateway Configuration
+# =======================
+stripe:
+  api:
+    key: your-stripe-key-here
+
+razorpay:
+  api:
+    key: rzp_test_rkHXOYqKLbAVV4
+    secret: gt3CzLXIUAor2I1rGs9WR3hh
