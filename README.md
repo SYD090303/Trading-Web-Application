@@ -56,4 +56,4 @@ Ensure you have the following installed:
 1. Clone the repository  
    ```bash
    git clone https://github.com/SYD090303/Trading-Web-Application.git
-   cd your-repo
+
